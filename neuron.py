@@ -6,6 +6,7 @@ import numpy as np
 TAU = 10 * (10**-3) # 10 ms
 RM = 4 * (10**6) # 4 MOhm
 I_AMP = 0.1 * (10**-6) # 0.1 µA
+DT = 0.1 * 10**-3
 
 print("Tau:", TAU)
 print("Rm", RM)
@@ -14,11 +15,13 @@ print("Iamp:", I_AMP)
 # neuron class
 class Neuron():
 
-    def __init__(self, angle, threshold=20*(10**-3)):
+    def __init__(self, angle, threshold=20*(10**-3), max_freq=100):
         self.angle = angle
         self.v0 = 0
         self.offset_t = 0
         self.threshold = threshold
+        self.max_freq = max_freq
+        self.PA = False
         print("Seuil:", self.threshold)
 
     def V(self, t, n_pa):
@@ -30,40 +33,76 @@ class Neuron():
             self.v0 = current_v
             self.offset_t = t
         if current_v >= self.threshold:
+            self.PA = True
             self.v0 = 0
             self.offset_t = t
+        else:
+            self.PA = False
 
         return current_v
     
     def poisson_dist(self, freq, dt):
         lam = freq * dt
         dist = []
-        for k in range(4):
+        for k in range(3):
             dist.append(((lam**k)/math.factorial(k))*math.exp(-lam))
         dist.append(1-np.sum(dist))
         return dist
     
-# simulating for constant incoming PAs
+    def get_freq(self, angle):
+        return self.max_freq * (7/12 + (5/12 * math.cos(angle - self.angle)))
+    
+    def reset(self):
+        self.offset_t = 0
+        self.v0 = 0
+    
 
-test_neuron = Neuron(180)
-T = np.linspace(0, 0.5, 5000)
-freq = 10
-dt = 0.1 * 10**-3
-dist = test_neuron.poisson_dist(freq, dt)
-n_ap = 0
-activities = []
-for i, t in enumerate(T):
-    # ap = 1 if i % (1000/freq) == 0 else 0
-    ap = np.random.choice(list(range(5)), p=dist)
-    if ap > 0:
-        n_ap += ap
+# PARTIE I
+neuron = Neuron(180)
 
-    v = test_neuron.V(t, ap)
-    activities.append(v)
+MAX_T = 0.5
+TRIES = 5
+DIRECTIONS = 8
+T = np.linspace(0, MAX_T, int(MAX_T/DT))
 
-print(n_ap)
+# loop over angles
+for angle in range(0, 360, int(360/DIRECTIONS)):
+    spikes = np.zeros(shape=(TRIES, len(T)))
 
-plt.plot(T, np.array(activities)*1000)
-plt.xlabel("Time (s)")
-plt.ylabel("mV")
-plt.show()
+    # get EPSP frequency
+    epsp_freq = neuron.get_freq(angle)
+    # get Poisson distribution
+    p_dist = neuron.poisson_dist(epsp_freq, DT)
+
+    # loop over tries (5 tries per angle)
+    for n_try in range(TRIES):
+
+        # reset neuron's V0 and t_offset
+        neuron.reset()
+
+        # loop over time samples
+        for i, t in enumerate(T):
+            
+            # get number of incoming EPSPs
+            n_pa = np.random.choice([0, 1, 2, 3], p=p_dist)
+
+            # calculate current neuron potential
+            pot = neuron.V(t, n_pa)
+
+            # check if PA happened
+            if neuron.PA:
+                spikes[n_try, i] = 1.
+                if i > 0:
+                    spikes[n_try, i-1] = 1.
+                if i < len(T)-1:
+                    spikes[n_try, i+1] = 1.
+
+    # plot
+    plt.imshow(spikes,aspect='auto', cmap='Greys', interpolation='nearest')
+    og_xticks = plt.xticks()[0]
+    plt.xticks(og_xticks, [str(tick*10**-4) for tick in og_xticks])
+    plt.xlim(0, 5000)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Tries')
+    plt.title(f'Spikes over time for angle = {angle} degrees')
+    plt.show()
