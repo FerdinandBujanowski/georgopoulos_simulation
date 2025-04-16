@@ -50,7 +50,7 @@ class Neuron():
         return dist
     
     def get_freq(self, angle):
-        return self.max_freq * (7/12 + (5/12 * math.cos(angle - self.angle)))
+        return self.max_freq * (7/12 + (5/12 * math.cos(np.radians(angle - self.angle))))
     
     def reset(self):
         self.offset_t = 0
@@ -58,16 +58,21 @@ class Neuron():
     
 
 # PARTIE I
-neuron = Neuron(180)
+ANGLE = 180
+neuron = Neuron(ANGLE)
 
 MAX_T = 0.5
 TRIES = 5
 DIRECTIONS = 8
-T = np.linspace(0, MAX_T, int(MAX_T/DT))
+ANGLES = range(0, 360, int(360/DIRECTIONS))
+LT = int(MAX_T/DT)
+T = np.linspace(0, MAX_T, LT)
+
+exp_data = {}
 
 # loop over angles
-for angle in range(0, 360, int(360/DIRECTIONS)):
-    spikes = np.zeros(shape=(TRIES, len(T)))
+for angle in ANGLES:
+    spikes = np.zeros(shape=(TRIES, LT))
 
     # get EPSP frequency
     epsp_freq = neuron.get_freq(angle)
@@ -97,12 +102,32 @@ for angle in range(0, 360, int(360/DIRECTIONS)):
                 if i < len(T)-1:
                     spikes[n_try, i+1] = 1.
 
+    # adding data to dict for later analysis
+    exp_data[angle] = spikes
+
     # plot
     plt.imshow(spikes,aspect='auto', cmap='Greys', interpolation='nearest')
     og_xticks = plt.xticks()[0]
     plt.xticks(og_xticks, [str(tick*10**-4) for tick in og_xticks])
-    plt.xlim(0, 5000)
+    plt.xlim(0, LT)
     plt.xlabel('Time (s)')
     plt.ylabel('Tries')
     plt.title(f'Spikes over time for angle = {angle} degrees')
-    plt.show()
+    plt.savefig(f'./plots/spikes_{angle}.png')
+
+# courbe d'accord
+averages = []
+std_devs = []
+
+for angle in ANGLES:
+    data = exp_data[angle]
+    freqs = np.sum(data, axis=1) / MAX_T
+    averages.append(np.average(freqs))
+    std_devs.append(np.std(freqs))
+
+plt.clf()
+plt.errorbar(ANGLES, averages, std_devs)
+plt.xlabel('Angle (degrees)')
+plt.ylabel('Spike rate (Hz)')
+plt.title(f'Average spike rate for {ANGLE}°-neuron')
+plt.show()
