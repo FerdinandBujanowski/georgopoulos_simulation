@@ -47,9 +47,15 @@ for angle in ANGLES:
     # adding data to dict for later analysis
     exp_data[angle] = spikes
 
+    thickness = 7
+    spikes_copy = np.zeros(shape=spikes.shape)
+    for i in range(spikes_copy.shape[0]):
+        for j in range(spikes_copy.shape[1]):
+            if 1. in spikes[i, max(j-thickness, 0):min(j+thickness, spikes.shape[1])]:
+                spikes_copy[i, j] = 1.
+
     # plot
-    # TODO thicken bars
-    plt.imshow(spikes,aspect='auto', cmap='Greys', interpolation='nearest')
+    plt.imshow(spikes_copy, aspect='auto', cmap='Greys', interpolation='nearest')
     og_xticks = plt.xticks()[0]
     plt.xticks(og_xticks, [str(tick*10**-4) for tick in og_xticks])
     plt.xlim(0, LT)
