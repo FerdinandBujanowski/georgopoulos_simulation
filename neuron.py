@@ -46,6 +46,6 @@ class Neuron():
     def get_freq(self, angle):
         return self.max_freq * (7/12 + (5/12 * math.cos(np.radians(angle - self.angle))))
     
-    def reset(self):
-        self.offset_t = 0
+    def reset(self, offset_t=0):
+        self.offset_t = offset_t
         self.v0 = 0
