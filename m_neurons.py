@@ -67,4 +67,5 @@ plt.annotate("", (vector_sum[0], vector_sum[1]), (0, 0), arrowprops={"arrowstyle
 plt.grid()
 plt.gca().set_aspect('equal')
 plt.title(f'Neuron population vector for stimulus={RANDOM_ANGLE}°')
+plt.savefig(f'./plots/{M}_neurons_vector.png')
 plt.show()
