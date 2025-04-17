@@ -1,9 +1,7 @@
-import math
 import matplotlib.pyplot as plt
 import numpy as np
 from neuron import Neuron
 
-# PARTIE I
 ANGLE = 180
 neuron = Neuron(ANGLE)
 

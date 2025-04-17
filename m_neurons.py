@@ -3,15 +3,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def rand_angle():
-    return np.random.random() * 360
+    return int(np.random.random() * 360)
 
 M = 30
 neurons = []
 for i in range(M):
-    neurons.append(Neuron(i*13))
+    neurons.append(Neuron(i*int(360/M)))
 
-RANDOM_ANGLE = 0 #rand_angle()
-print(RANDOM_ANGLE)
+RANDOM_ANGLE = rand_angle()
 
 TRIES = 5
 MAX_T = 0.5
@@ -66,4 +65,6 @@ for vector in vectors:
     plt.annotate("", (vector[0], vector[1]), (0, 0), arrowprops={"arrowstyle":'->', "color":'blue', "linewidth":2, "alpha":0.5})
 plt.annotate("", (vector_sum[0], vector_sum[1]), (0, 0), arrowprops={"arrowstyle":'->', "color":'red', "linewidth":3})
 plt.grid()
+plt.gca().set_aspect('equal')
+plt.title(f'Neuron population vector for stimulus={RANDOM_ANGLE}°')
 plt.show()
