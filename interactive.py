@@ -111,7 +111,7 @@ while True:
         for j in range(display_space):
             act = activities[i, j]
             pygame.draw.rect(screen, SHADOW.lerp('white', 0.6*act), (track_margin + j*TICK_WIDTH, track_rect[1] + i*neuron_height, TICK_WIDTH, neuron_height))
-    pygame.draw.rect(screen, CONTOUR, (track_margin + (n_ticks % display_space)*TICK_WIDTH, track_rect[1], TICK_WIDTH, track_rect[3]))
+    pygame.draw.rect(screen, pygame.Color(0, 0, 255), (track_margin + (n_ticks % display_space)*TICK_WIDTH, track_rect[1], TICK_WIDTH, track_rect[3]))
 
     if decoded is not None:
         max_norm = 0
